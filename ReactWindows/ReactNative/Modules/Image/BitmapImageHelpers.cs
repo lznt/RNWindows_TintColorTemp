@@ -122,23 +122,12 @@ namespace ReactNative.Modules.Image
                 .Select(_ => new ImageStatusEventData(ImageLoadStatus.OnLoadStart));
         }
 
-        private static byte ColorValue(double frontColor, double frontAlpha, double backColor, double backAlpha)
-        {
-            return (byte)((frontColor * frontAlpha + backColor * backAlpha * (1 - frontAlpha)) /
-                                (frontAlpha + backAlpha * (1 - frontAlpha)));
-        }
-
-        private static byte AlphaValue(double frontAlpha, double backAlpha)
-        {
-            return (byte)(frontAlpha + backAlpha * (1 - (frontAlpha / 255)));
-        }
-
         public static async Task<WriteableBitmap> ColorizePixelData(
-            uint width,
-            uint height,
-            byte[] pixelData,
-            Color? tintColor,
-            Color? backgroundColor)
+           uint width,
+           uint height,
+           byte[] pixelData,
+           Color? tintColor,
+           Color? backgroundColor)
         {
             var pixels = new byte[pixelData.Length];
             pixelData.CopyTo(pixels, 0);
@@ -176,6 +165,17 @@ namespace ReactNative.Modules.Image
             }
 
             return writableBitmap;
+        }
+
+        private static byte ColorValue(double frontColor, double frontAlpha, double backColor, double backAlpha)
+        {
+            return (byte)((frontColor * frontAlpha + backColor * backAlpha * (1 - frontAlpha)) /
+                                (frontAlpha + backAlpha * (1 - frontAlpha)));
+        }
+
+        private static byte AlphaValue(double frontAlpha, double backAlpha)
+        {
+            return (byte)(frontAlpha + backAlpha * (1 - (frontAlpha / 255)));
         }
     }
 }

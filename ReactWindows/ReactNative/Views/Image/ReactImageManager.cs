@@ -8,7 +8,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reactive.Disposables;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
 using Windows.Storage.Streams;
@@ -31,9 +30,6 @@ namespace ReactNative.Views.Image
         private readonly Dictionary<int, List<KeyValuePair<string, double>>> _imageSources =
             new Dictionary<int, List<KeyValuePair<string, double>>>();
 
-        private Color? _tintColor;
-        private Color? _backgroundColor;
-
         /// <summary>
         /// The view manager name.
         /// </summary>
@@ -45,85 +41,6 @@ namespace ReactNative.Views.Image
             }
         }
 
-        /// <summary>
-        /// This method should return the <see cref="ReactImageShadowNode"/>
-        /// which will be then used for measuring the position and size of the
-        /// view. 
-        /// </summary>
-        /// <returns>The shadow node instance.</returns>
-        public override ReactImageShadowNode CreateShadowNodeInstance()
-        {
-            return new ReactImageShadowNode();
-        }
-
-        /// <summary>
-        /// Implement this method to receive optional extra data enqueued from
-        /// the corresponding instance of <see cref="ReactShadowNode"/> in
-        /// <see cref="ReactShadowNode.OnCollectExtraUpdates"/>.
-        /// </summary>
-        /// <param name="view">The view.</param>
-        /// <param name="extraData">The extra data.</param>
-        public override void UpdateExtraData(Border view, object extraData)
-        {
-            Tuple<JArray, Color?, Color?> imageExtraData = (Tuple<JArray, Color?, Color?>)extraData;
-            var imageBrush = (ImageBrush)view.Background;
-
-            OnImageStatusUpdate(view, ImageLoadStatus.OnLoadStart, new ImageMetadata());
-
-            var sources = imageExtraData.Item1;
-            _tintColor = imageExtraData.Item2;
-            _backgroundColor = imageExtraData.Item3;
-
-            var count = sources.Count;
-
-            // There is no image source
-            if (count == 0)
-            {
-                throw new ArgumentException("Sources must not be empty.", nameof(sources));
-            }
-            // Optimize for the case where we have just one uri, case in which we don't need the sizes
-            else if (count == 1)
-            {
-                var uri = ((JObject)sources[0]).Value<string>("uri");
-                SetUriFromSingleSource(view, uri, _tintColor, _backgroundColor);
-            }
-            else
-            {
-                var viewSources = default(List<KeyValuePair<string, double>>);
-                var tag = view.GetTag();
-
-                if (_imageSources.TryGetValue(tag, out viewSources))
-                {
-                    viewSources.Clear();
-                }
-                else
-                {
-                    viewSources = new List<KeyValuePair<string, double>>(count);
-                    _imageSources.Add(tag, viewSources);
-                }
-
-                foreach (var source in sources)
-                {
-                    var sourceData = (JObject)source;
-                    viewSources.Add(
-                        new KeyValuePair<string, double>(
-                            sourceData.Value<string>("uri"),
-                            sourceData.Value<double>("width") * sourceData.Value<double>("height")));
-                }
-
-                viewSources.Sort((p1, p2) => p1.Value.CompareTo(p2.Value));
-
-                if (double.IsNaN(view.Width) || double.IsNaN(view.Height))
-                {
-                    // If we need to choose from multiple URIs but the size is not yet set, wait for layout pass
-                    return;
-                }
-
-                var uriToLoad = ChooseUriFromMultipleSources(view);
-                if (uriToLoad != null)
-                    SetUriFromSingleSource(view, uriToLoad, _tintColor, _backgroundColor);
-            }
-        }
         /// <summary>
         /// The view manager event constants.
         /// </summary>
@@ -184,7 +101,64 @@ namespace ReactNative.Views.Image
                 }
             }
         }
-        
+
+        /// <summary>
+        /// Set the source URI of the image.
+        /// </summary>
+        /// <param name="view">The image view instance.</param>
+        /// <param name="sources">The source URI.</param>
+        /* [ReactProp("src")]
+        public void SetSource(Border view, JArray sources)
+        {
+            var count = sources.Count;
+
+            // There is no image source
+            if (count == 0)
+            {
+                throw new ArgumentException("Sources must not be empty.", nameof(sources));
+            }
+            // Optimize for the case where we have just one uri, case in which we don't need the sizes
+            else if (count == 1)
+            {
+                var uri = ((JObject)sources[0]).Value<string>("uri");
+                SetUriFromSingleSource(view, uri);
+            }
+            else
+            {
+                var viewSources = default(List<KeyValuePair<string, double>>);
+                var tag = view.GetTag();
+
+                if (_imageSources.TryGetValue(tag, out viewSources))
+                {
+                    viewSources.Clear();
+                }
+                else
+                {
+                    viewSources = new List<KeyValuePair<string, double>>(count);
+                    _imageSources.Add(tag, viewSources);
+                }
+
+                foreach (var source in sources)
+                {
+                    var sourceData = (JObject)source;
+                    viewSources.Add(
+                        new KeyValuePair<string, double>(
+                            sourceData.Value<string>("uri"),
+                            sourceData.Value<double>("width") * sourceData.Value<double>("height")));
+                }
+
+                viewSources.Sort((p1, p2) => p1.Value.CompareTo(p2.Value));
+
+                if (double.IsNaN(view.Width) || double.IsNaN(view.Height))
+                {
+                    // If we need to choose from multiple URIs but the size is not yet set, wait for layout pass
+                    return;
+                }
+
+                SetUriFromMultipleSources(view);
+            }
+        } */
+
         /// <summary>
         /// The border radius of the <see cref="ReactRootView"/>.
         /// </summary>
@@ -269,15 +243,12 @@ namespace ReactNative.Views.Image
         /// </summary>
         /// <param name="view">The view.</param>
         /// <param name="dimensions">The output buffer.</param>
-        ///
-        public override void SetDimensions(Border view, Dimensions dimensions)
+        /* public override void SetDimensions(Border view, Dimensions dimensions)
         {
             base.SetDimensions(view, dimensions);
-            var uriToLoad = ChooseUriFromMultipleSources(view);
-            if (uriToLoad != null)
-                SetUriFromSingleSource(view, uriToLoad, _tintColor, _backgroundColor);
-        }
-
+            //SetUriFromMultipleSources(view);
+        }  */ 
+         
         private void OnImageFailed(Border view)
         {
             view.GetReactContext()
@@ -381,20 +352,6 @@ namespace ReactNative.Views.Image
             }
         }
 
-        private static async Task<IRandomAccessStream> CreateStreamFromHttpUri(string source)
-        {
-            /* We could use RandomAccessStreamReference.CreateFromUri(source).OpenReadAsync()
-             *  if it didn't mysteriously occasionally fail with dev server.
-             *  Therefore we have to climb the tree with feet first.
-             */
-            var response = await System.Net.HttpWebRequest.CreateHttp(source).GetResponseAsync();
-            using (var responseStream = response.GetResponseStream())
-            {
-                var memStream = new MemoryStream();
-                await responseStream.CopyToAsync(memStream);
-                return memStream.AsRandomAccessStream();
-            }
-        }
 
         private static async Task<IRandomAccessStream> CreateStreamFromAppUri(string source)
         {
@@ -418,9 +375,101 @@ namespace ReactNative.Views.Image
             return await BitmapImageHelpers.ColorizePixelData(decoder.PixelWidth, decoder.PixelHeight, pixelData.DetachPixelData(), tintColor, backgroundColor);
         }
 
-        private void Bi_ImageOpened(object sender, RoutedEventArgs e)
+        private static async Task<IRandomAccessStream> CreateStreamFromHttpUri(string source)
         {
-            throw new NotImplementedException();
+            /* We could use RandomAccessStreamReference.CreateFromUri(source).OpenReadAsync()
+             *  if it didn't mysteriously occasionally fail with dev server.
+             *  Therefore we have to climb the tree with feet first.
+             */
+            var response = await System.Net.HttpWebRequest.CreateHttp(source).GetResponseAsync();
+            using (var responseStream = response.GetResponseStream())
+            {
+                using (var memStream = new MemoryStream())
+                {
+                    await responseStream.CopyToAsync(memStream);
+                    return memStream.AsRandomAccessStream();
+                }
+            }
+        }
+
+        /// <summary>
+        /// This method should return the <see cref="ReactImageShadowNode"/>
+        /// which will be then used for measuring the position and size of the
+        /// view. 
+        /// </summary>
+        /// <returns>The shadow node instance.</returns>
+        public override ReactImageShadowNode CreateShadowNodeInstance()
+        {
+            return new ReactImageShadowNode();
+        }
+
+        /// <summary>
+        /// Implement this method to receive optional extra data enqueued from
+        /// the corresponding instance of <see cref="ReactShadowNode"/> in
+        /// <see cref="ReactShadowNode.OnCollectExtraUpdates"/>.
+        /// </summary>
+        /// <param name="view">The view.</param>
+        /// <param name="extraData">The extra data.</param>
+        public override void UpdateExtraData(Border view, object extraData)
+        {
+            Tuple<JArray, Color?, Color?> imageExtraData = (Tuple<JArray, Color?, Color?>)extraData;
+            var imageBrush = (ImageBrush)view.Background;
+
+            OnImageStatusUpdate(view, ImageLoadStatus.OnLoadStart, new ImageMetadata());
+            //            OnImageStatusUpdate(view, new ImageStatusEventData(ImageLoadStatus.OnLoadStart));
+
+            var sources = imageExtraData.Item1;
+            var tintColor = imageExtraData.Item2;
+            var backgroundColor = imageExtraData.Item3;
+
+            var count = sources.Count;
+
+            // There is no image source
+            if (count == 0)
+            {
+                throw new ArgumentException("Sources must not be empty.", nameof(sources));
+            }
+            // Optimize for the case where we have just one uri, case in which we don't need the sizes
+            else if (count == 1)
+            {
+                var uri = ((JObject)sources[0]).Value<string>("uri");
+                SetUriFromSingleSource(view, uri, tintColor, backgroundColor);
+            }
+            else
+            {
+                var viewSources = default(List<KeyValuePair<string, double>>);
+                var tag = view.GetTag();
+
+                if (_imageSources.TryGetValue(tag, out viewSources))
+                {
+                    viewSources.Clear();
+                }
+                else
+                {
+                    viewSources = new List<KeyValuePair<string, double>>(count);
+                    _imageSources.Add(tag, viewSources);
+                }
+
+                foreach (var source in sources)
+                {
+                    var sourceData = (JObject)source;
+                    viewSources.Add(
+                        new KeyValuePair<string, double>(
+                            sourceData.Value<string>("uri"),
+                            sourceData.Value<double>("width") * sourceData.Value<double>("height")));
+                }
+
+                viewSources.Sort((p1, p2) => p1.Value.CompareTo(p2.Value));
+
+                if (double.IsNaN(view.Width) || double.IsNaN(view.Height))
+                {
+                    // If we need to choose from multiple URIs but the size is not yet set, wait for layout pass
+                    return;
+                }
+
+                var uriToLoad = ChooseUriFromMultipleSources(view);
+                SetUriFromSingleSource(view, uriToLoad, tintColor, backgroundColor);
+            }
         }
 
         /// <summary>
@@ -438,7 +487,24 @@ namespace ReactNative.Views.Image
                 var bestResult = sources.LocalMin((s) => Math.Abs(s.Value - targetImageSize));
                 return bestResult.Key;
             }
-            return null;
+            return "";
         }
+
+        /// <summary>
+        /// Chooses the uri with the size closest to the target image size. Must be called only after the
+        /// layout pass when the sizes of the target image have been computed, and when there are at least
+        /// two sources to choose from.
+        /// </summary>
+        /// <param name="view">The image view instance.</param>
+       /* private void SetUriFromMultipleSources(Border view)
+        {
+            var sources = default(List<KeyValuePair<string, double>>);
+            if (_imageSources.TryGetValue(view.GetTag(), out sources))
+            {
+                var targetImageSize = view.Width * view.Height;
+                var bestResult = sources.LocalMin((s) => Math.Abs(s.Value - targetImageSize));
+                SetUriFromSingleSource(view, bestResult.Key);
+            }
+        } */ 
     }
 }
