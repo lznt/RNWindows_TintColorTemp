@@ -21,11 +21,14 @@ namespace ReactNative.Views.Text
         private int _letterSpacing;
         private int _numberOfLines;
 
+        private bool _allowFontScaling;
+
         private double? _fontSize;
         private double _lineHeight;
 
         private FontStyle? _fontStyle;
         private FontWeight? _fontWeight;
+        
         private TextAlignment _textAlignment = TextAlignment.DetectFromContent;
 
         private string _fontFamily;
@@ -144,6 +147,20 @@ namespace ReactNative.Views.Text
         }
 
         /// <summary>
+        /// Set fontScaling
+        /// </summary>
+        /// <param name="allowFontScaling">Max number of lines.</param>
+        [ReactProp(ViewProps.AllowFontScaling)]
+        public virtual void SetAllowFontScaling(bool allowFontScaling)
+        {
+            if (_allowFontScaling != allowFontScaling)
+            {
+                _allowFontScaling = allowFontScaling;
+                MarkUpdated();
+            }
+        }
+
+        /// <summary>
         /// Sets the text alignment.
         /// </summary>
         /// <param name="textAlign">The text alignment string.</param>
@@ -243,6 +260,7 @@ namespace ReactNative.Views.Text
             textBlock.FontSize = _fontSize ?? 15;
             textBlock.FontStyle = _fontStyle ?? FontStyle.Normal;
             textBlock.FontWeight = _fontWeight ?? FontWeights.Normal;
+            textBlock.IsTextScaleFactorEnabled = _allowFontScaling;
 
             if (!measureOnly)
             {
