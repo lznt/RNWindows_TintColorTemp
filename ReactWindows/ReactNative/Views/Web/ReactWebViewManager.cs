@@ -150,7 +150,7 @@ namespace ReactNative.Views.Web
                         if (body != null)
                         {
                             request.Content = new HttpStringContent(body);
-                            if ((headers != null) && (headers["Content-Type"].Value<string>() != ""))
+                            if ((headers != null) && headers["Content-Type"] != null && (headers["Content-Type"].Value<string>() != ""))
                                 request.Content.Headers.ContentType = new Windows.Web.Http.Headers.HttpMediaTypeHeaderValue(headers["Content-Type"].Value<string>());
                         }
 
