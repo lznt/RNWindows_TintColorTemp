@@ -76,6 +76,17 @@ namespace ReactNative
         }
 
         /// <summary>
+        /// Instantiates the JavaScript executor.
+        /// </summary>
+        public virtual Func<IJavaScriptExecutor> JavaScriptExecutorFactory
+        {
+            get
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
         /// The name of the main component registered from JavaScript.
         /// </summary>
         public abstract string MainComponentName { get; }
@@ -145,7 +156,7 @@ namespace ReactNative
         /// </summary>
         public async Task DisposeAsync()
         {
-            RootView?.RemoveHandler(Keyboard.KeyDownEvent, (KeyEventHandler) OnAcceleratorKeyActivated);
+            RootView?.RemoveHandler(Keyboard.KeyDownEvent, (KeyEventHandler)OnAcceleratorKeyActivated);
 
             if (_reactInstanceManager.IsValueCreated)
             {
@@ -205,6 +216,7 @@ namespace ReactNative
                 InitialLifecycleState = LifecycleState.Resumed,
                 JavaScriptBundleFile = JavaScriptBundleFile,
                 JavaScriptMainModuleName = JavaScriptMainModuleName,
+                JavaScriptExecutorFactory = JavaScriptExecutorFactory,
             };
 
             builder.Packages.AddRange(Packages);
@@ -223,14 +235,19 @@ namespace ReactNative
                 return;
             }
 
-            if (arguments.Length % 2 != 0)
+            var index = Array.IndexOf(arguments, "remoteDebugging");
+            if (index < 0)
             {
-                throw new ArgumentException("Expected even number of arguments.", nameof(arguments));
+                return;
             }
 
-            var index = Array.IndexOf(arguments, "remoteDebugging");
-            var isRemoteDebuggingEnabled = default(bool);
-            if (index % 2 == 0 && bool.TryParse(arguments[index + 1], out isRemoteDebuggingEnabled))
+            if (arguments.Length <= index + 1)
+            {
+                throw new ArgumentException("Expected value for remoteDebugging argument.", nameof(arguments));
+            }
+
+            bool isRemoteDebuggingEnabled;
+            if (bool.TryParse(arguments[index + 1], out isRemoteDebuggingEnabled))
             {
                 ReactInstanceManager.DevSupportManager.IsRemoteDebuggingEnabled = isRemoteDebuggingEnabled;
             }
